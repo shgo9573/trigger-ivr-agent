@@ -1,53 +1,55 @@
 export default async function handler(request, response) {
-  console.log("Function started. Received a request.");
+  console.log("Function execution started.");
 
-  // קורא את הטוקן הסודי מההגדרות המאובטחות של Vercel
-  const GITHUB_TOKEN = process.env.GITHUB_PAT; 
-  
-  // בודק אם הטוקן בכלל קיים
-  if (!GITHUB_TOKEN) {
-    console.error("CRITICAL ERROR: GITHUB_PAT environment variable is not set!");
-    return response.status(500).send('Server configuration error: Missing secret token.');
+  // --- שלב 1: בדיקת הטוקן ---
+  const githubToken = process.env.GITHUB_PAT;
+
+  if (!githubToken) {
+    const errorMessage = "CRITICAL: GITHUB_PAT environment variable not found. Check Vercel project settings.";
+    console.error(errorMessage);
+    return response.status(500).send(errorMessage);
   }
-  console.log("GitHub token loaded successfully from environment variables.");
 
-  // פרטי המאגר שלך (ודא שהם נכונים)
-  const GITHUB_USERNAME = 'shgo9573';
-  const REPO_NAME = 'agent-phon';
-  const EVENT_TYPE = 'run-ivr-agent';
+  // מדפיסים רק חלק קטן מהטוקן כדי לוודא שהוא נטען, אבל לא חושפים אותו
+  console.log(`Successfully loaded GITHUB_PAT. Token starts with: ${githubToken.substring(0, 12)}...`);
+
+  // --- שלב 2: הגדרת פרטי הבקשה ---
+  const owner = 'shgo9573';
+  const repo = 'agent-phon';
+  const event_type = 'run-ivr-agent';
   
-  const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/dispatches`;
-  console.log(`Preparing to send POST request to: ${url}`);
-  
+  const url = `https://api.github.com/repos/${owner}/${repo}/dispatches`;
+  console.log(`Preparing to dispatch event '${event_type}' to '${owner}/${repo}'.`);
+
+  // --- שלב 3: שליחת הבקשה ל-GitHub ---
   try {
-    // שולח את הבקשה להפעלת ה-Action
     const fetchResponse = await fetch(url, {
       method: 'POST',
       headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Content-Type': 'application/json', // הוספנו Header חשוב
+        'Accept': 'application/vnd.github.json', // שינוי קל ל-header המומלץ
+        'Authorization': `Bearer ${githubToken}`, // שינוי קל ל-Bearer במקום token
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        event_type: EVENT_TYPE,
-      }),
+      body: JSON.stringify({ event_type }),
     });
 
-    console.log(`GitHub API responded with status: ${fetchResponse.status}`);
+    console.log(`GitHub API responded with status code: ${fetchResponse.status}`);
 
-    // אם התשובה מ-GitHub אינה חיובית, נדפיס את השגיאה
-    if (!fetchResponse.ok) {
+    if (fetchResponse.status === 204) { // 204 No Content היא תגובת ההצלחה מ-GitHub
+      console.log("Success! GitHub Action triggered.");
+      return response.status(200).send("OK: GitHub Action triggered successfully.");
+    } else {
+      // אם קיבלנו סטטוס אחר, נציג אותו בלוג
       const errorBody = await fetchResponse.text();
-      console.error("Error from GitHub API:", errorBody);
-      return response.status(500).send(`Error triggering workflow. GitHub API responded with status ${fetchResponse.status}. Body: ${errorBody}`);
+      const errorMessage = `Failed to trigger GitHub Action. Status: ${fetchResponse.status}. Response: ${errorBody}`;
+      console.error(errorMessage);
+      return response.status(500).send(errorMessage);
     }
 
-    // אם הכל הצליח
-    console.log("Successfully triggered the GitHub Action.");
-    response.status(200).send('OK: IVR Agent Workflow Triggered Successfully.');
-
   } catch (error) {
-    console.error("An unexpected error occurred:", error);
-    response.status(500).send(`An unexpected server error occurred: ${error.message}`);
+    const errorMessage = `An unexpected network or fetch error occurred: ${error.message}`;
+    console.error(errorMessage);
+    return response.status(500).send(errorMessage);
   }
 }
