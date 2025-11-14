@@ -78,26 +78,21 @@ def download_media(video_url, format_choice):
             'noplaylist': True,
         }
 
-        # --- התיקון נמצא כאן ---
         if format_choice == 'mp3':
-            # מוריד את האודיו הטוב ביותר וממיר ל-MP3
             ydl_opts['format'] = 'bestaudio/best'
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192', # איכות MP3, 192kbps היא איכות טובה
+                'preferredquality': '192',
             }]
         elif format_choice == 'mp4':
-            # מוריד וידאו ואודיו בפורמט MP4
             ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
         else:
-            # אם הפורמט לא מוכר, משתמש ב-MP4 כברירת מחדל
             print(f"פורמט לא נתמך: {format_choice}. מוריד כ-MP4.")
             ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=True)
-            # קביעת שם הקובץ הסופי לאחר ההמרה
             base, _ = os.path.splitext(ydl.prepare_filename(info))
             if format_choice == 'mp3':
                 final_filename = base + '.mp3'
