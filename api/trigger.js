@@ -1,9 +1,12 @@
 export default async function handler(req, res) {
-  // קבלת הקישור מהבקשה, למשל: /api/trigger?url=VIDEO_URL
-  const { url } = req.query;
+  // קבלת הקישור והפורמט מהבקשה, למשל: /api/trigger?url=VIDEO_URL&format=mp3
+  const { url, format } = req.query;
 
   if (!url) {
     return res.status(400).json({ error: 'URL parameter is missing' });
+  }
+  if (!format) {
+    return res.status(400).json({ error: 'Format parameter is missing (mp3 or mp4)' });
   }
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -21,6 +24,7 @@ export default async function handler(req, res) {
         event_type: 'download-video',
         client_payload: {
           url: url,
+          format: format, // העברת הפורמט ל-GitHub Action
         },
       }),
     });
