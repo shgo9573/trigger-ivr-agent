@@ -17,9 +17,8 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies and FFmpeg
+      - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
           pip install yt-dlp
           pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
