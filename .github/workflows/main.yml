@@ -17,10 +17,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      # --- הוספה חדשה: התקנת ffmpeg ---
-      # Action זה מוריד את ffmpeg, מוסיף אותו ל-PATH,
-      # ומשתמש במטמון (cache) באופן אוטומטי כדי לזרז ריצות עתידיות.
-      - name: Setup FFMPEG
+      - name: Setup FFMPEG with Cache
         uses: FedericoCarboni/setup-ffmpeg@v2
 
       - name: Install Python dependencies
@@ -36,8 +33,9 @@ jobs:
           
           FORMAT="${{ github.event.client_payload.format }}"
           if [ -z "$FORMAT" ]; then
-            echo "Format was empty. Defaulting to mp4."
-            echo "mp4" > format.txt
+            # --- שינוי כאן ---
+            echo "Format was empty. Defaulting to mp3."
+            echo "mp3" > format.txt
           else
             echo "$FORMAT" > format.txt
           fi
