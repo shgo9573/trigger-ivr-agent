@@ -26,6 +26,7 @@ jobs:
       - name: Get URL from payload and write to file
         run: |
           echo "${{ github.event.client_payload.url }}" > link.txt
+          echo "${{ github.event.client_payload.format }}" > format.txt
           
       - name: Run Python script
         env:
