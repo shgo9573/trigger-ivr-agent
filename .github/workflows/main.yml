@@ -24,22 +24,19 @@ jobs:
           pip install yt-dlp
           pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 
-      - name: Debug incoming payload
-        run: echo "Received client payload: ${{ toJSON(github.event.client_payload) }}"
-          
-      - name: Get URL and Format from payload and write to files
+      - name: Get URL and Format from payload
         run: |
+          echo "Received format from Vercel: ${{ github.event.client_payload.format }}"
           echo "${{ github.event.client_payload.url }}" > link.txt
           
           FORMAT="${{ github.event.client_payload.format }}"
           if [ -z "$FORMAT" ]; then
-            echo "Format is empty in payload. Defaulting to mp4."
+            echo "Format was empty. Defaulting to mp4."
             echo "mp4" > format.txt
           else
-            echo "Received format: $FORMAT"
             echo "$FORMAT" > format.txt
           fi
-          
+
       - name: Run Python script
         env:
           GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
