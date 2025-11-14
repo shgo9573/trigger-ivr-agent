@@ -2,15 +2,16 @@ export default async function handler(req, res) {
   // קבלת הקישור והפורמט מהבקשה, למשל: /api/trigger?url=VIDEO_URL&format=mp3
   const { url, format } = req.query;
 
+  // בדיקה קפדנית ששני הפרמטרים קיימים
   if (!url) {
     return res.status(400).json({ error: 'URL parameter is missing' });
   }
-  if (!format) {
-    return res.status(400).json({ error: 'Format parameter is missing (mp3 or mp4)' });
+  if (!format || (format !== 'mp3' && format !== 'mp4')) {
+    return res.status(400).json({ error: 'Format parameter is missing or invalid. Must be "mp3" or "mp4".' });
   }
 
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-  const GITHUB_REPO = process.env.GITHUB_REPO; // למשל: "your-username/your-repo"
+  const GITHUB_REPO = process.env.GITHUB_REPO; 
 
   try {
     const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/dispatches`, {
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
         event_type: 'download-video',
         client_payload: {
           url: url,
-          format: format, // העברת הפורמט ל-GitHub Action
+          format: format, // מוודא שהפורמט מועבר ל-GitHub Action
         },
       }),
     });
